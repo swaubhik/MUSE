@@ -66,10 +66,11 @@ class Trainer(object):
             tgt_ids = tgt_ids.cuda()
 
         # get word embeddings
-        src_emb = self.src_emb(Variable(src_ids, volatile=True))
-        tgt_emb = self.tgt_emb(Variable(tgt_ids, volatile=True))
-        src_emb = self.mapping(Variable(src_emb.data, volatile=volatile))
-        tgt_emb = Variable(tgt_emb.data, volatile=volatile)
+        with torch.no_grad():
+            src_emb = self.src_emb(src_ids)
+            tgt_emb = self.tgt_emb(tgt_ids)
+            src_emb = self.mapping(src_emb)
+            tgt_emb = tgt_emb
 
         # input / target
         x = torch.cat([src_emb, tgt_emb], 0)
@@ -216,6 +217,7 @@ class Trainer(object):
         """
         Save the best model for the given validation metric.
         """
+        print(to_log[metric],  self.best_valid_metric)
         # best mapping for the given validation criterion
         if to_log[metric] > self.best_valid_metric:
             # new best mapping
@@ -259,7 +261,8 @@ class Trainer(object):
         bs = 4096
         logger.info("Map source embeddings to the target space ...")
         for i, k in enumerate(range(0, len(src_emb), bs)):
-            x = Variable(src_emb[k:k + bs], volatile=True)
+            with torch.no_grad():
+                x = Variable(src_emb[k:k + bs])
             src_emb[k:k + bs] = self.mapping(x.cuda() if params.cuda else x).data.cpu()
 
         # write embeddings to the disk
