@@ -46,7 +46,7 @@ def load_dictionary(path, word2id1, word2id2):
     Return a torch tensor of size (n, 2) where n is the size of the
     loader dictionary, and sort it by source word frequency.
     """
-    assert os.path.isfile(path)
+    assert os.path.isfile(path), f"Invalid file path: {path}"
 
     pairs = []
     not_found = 0
